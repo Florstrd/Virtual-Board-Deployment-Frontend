@@ -148,7 +148,7 @@ function printBoard(boardId, boardName) {
 
 function ws() {
 WS_TOKEN = localStorage.getItem('jwt');
-const socket = new WebSocket(`ws://localhost:5000?token=${WS_TOKEN}`);
+const socket = new WebSocket(`wss://virtual-board-v1-ws-dennis.azurewebsites.net/?token=${WS_TOKEN}`);
     
     
 socket.onopen = function (event) {
