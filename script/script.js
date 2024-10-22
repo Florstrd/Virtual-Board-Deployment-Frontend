@@ -8,12 +8,16 @@ async function logIn(user, password) {
         })
     });
     const respData = await response.json();
-            console.log(respData);
+            //console.log(respData);
             
             if (respData.jwt) {
                 localStorage.setItem("jwt", respData.jwt);
                 console.log("Logged in");
                 getBoards();
+                document.getElementById("login-fail").style.display = "none";
+                document.getElementById("login-success").style.display = "block";
+            } else {
+                document.getElementById("login-fail").style.display = "block";
             }
             
 }
@@ -22,8 +26,8 @@ async function saveNote(noteId, note, style) {
     const jwt = localStorage.getItem("jwt");
     const boardId = localStorage.getItem("boardId");
     try {
-        console.log(jwt);
-        console.log(boardId);
+        //console.log(jwt);
+        //console.log(boardId);
         const response = await fetch(`https://virtual-board-v1-dennis.azurewebsites.net/notes/${noteId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json",
@@ -35,7 +39,11 @@ async function saveNote(noteId, note, style) {
             })
         });
         const respData = await response.json();
-        console.log(respData);
+        //console.log(respData.msg);
+        if (respData.msg === "Note edited!") {
+            document.getElementById("note-saved").style.display = "block";
+            setTimeout(closePopup, 2000);
+        }
     } catch (error) {
         const response = await fetch("https://virtual-board-v1-dennis.azurewebsites.net/notes", {
             method: "POST",
@@ -48,7 +56,11 @@ async function saveNote(noteId, note, style) {
             })
         });
         const respData = await response.json();
-        console.log(respData);
+        //console.log(respData.msg);
+        if (respData.msg === "Note edited!") {
+            document.getElementById("note-saved").style.display = "block";
+            setTimeout(closePopup, 2000);
+        }
     }
     
 }
@@ -63,7 +75,7 @@ async function deleteNote(noteId) {
             "Authorization": `Bearer ${jwt}` }
     });
     const respData = await response.json();
-    console.log(respData);
+    //console.log(respData);
     document.getElementById("board").innerHTML="";
     printBoard(boardId, boardName);
     getNotes(boardId);
@@ -79,12 +91,12 @@ async function getBoards() {
          }
     });
     const respData = await response.json();
-    console.log(respData);
+    //console.log(respData);
 
     document.getElementById("boards-menu").innerHTML = '<li><a class="dropdown-item" id="new-board">Create new board +</a></li>';
 
     for (let i in respData) {
-        console.log(respData[i].name);
+        //console.log(respData[i].name);
         document.getElementById("boards-menu").innerHTML +=`
         <li><a class="dropdown-item" name="${respData[i].name}" id="${respData[i].id}">${respData[i].name}</a></li>`;
     }
@@ -119,7 +131,7 @@ async function getNotes(boardId) {
                 <button func=save class="btn">Save</button>
             </div>
             <div class="container" id="note-field">
-                <textarea>${respData[i].note}</textarea>
+                <textarea rows="6">${respData[i].note}</textarea>
             </div>
         </div>`;
     }
@@ -136,7 +148,7 @@ async function saveNewBoard(name) {
         })
     });
     const respData = await response.json();
-    console.log(respData);
+    //console.log(respData);
 
     getBoards();
 }
@@ -158,7 +170,7 @@ socket.onopen = function (event) {
 socket.onmessage = function (event) {
     const data = JSON.parse(event.data);
     const message = JSON.parse(data.msg);
-    console.log('Received message:', message);
+    //console.log('Received message:', message);
     if (data.status == 0) {
         document.getElementById(`${message.id}`).setAttribute("style", message.style);
         document.getElementById(`${message.id}`).children[1].children[0].value = message.note;
@@ -175,7 +187,7 @@ document.querySelector('#board').addEventListener("mouseup" , (evt) => {
             style: evt.target.getAttribute("style"),
             note: evt.target.children[1].children[0].value
         }
-        console.log(message);
+        //console.log(message);
         socket.send(JSON.stringify(message));
     }
 
@@ -195,12 +207,13 @@ document.querySelector('#btn-login').addEventListener('click', () => {
 
 // Change board from menu
 document.querySelector("#boards-menu").addEventListener("click", (e) => {
-    console.log(e.target.classList);
+    document.getElementById("login-success").style.display = "none";
+    //console.log(e.target.classList);
     let boardId = e.target.id;
     let boardName = e.target.name;
     if (e.target.id === "new-board") {
         boardName = prompt("Enter name for new board:");
-        console.log(boardName);
+        //console.log(boardName);
         if (boardName === "" || boardName === null) {
             return;
         }
@@ -228,14 +241,12 @@ document.addEventListener("click", (evt) => {
             evt.target.parentElement.parentElement.style.backgroundColor = evt.target.getAttribute("color");
         }
         if (evt.target.getAttribute("func") === "save") {
-            console.log("Save this note");
             let noteId = evt.target.parentElement.getAttribute("noteid");
             let note = evt.target.parentElement.parentElement.children[1].children[0].value;
             let style = evt.target.parentElement.parentElement.getAttribute("style");
             saveNote(noteId, note, style);
         }
         if (evt.target.getAttribute("func") === "delete") {
-            console.log("Delete this note");
             let noteId = evt.target.parentElement.getAttribute("noteid");
             deleteNote(noteId);
         }
@@ -243,7 +254,6 @@ document.addEventListener("click", (evt) => {
     }
     if (evt.target.id === "new-note-btn") {
         createNewNote();
-        console.log("New note");
     }
 });
 
@@ -265,7 +275,11 @@ async function createNewNote() {
     const respData = await response.json();
     console.log(respData);
     getNotes(boardId);
-  }
+}
+
+async function closePopup() {
+    document.getElementById("note-saved").style.display = "none";
+}
 
 
   interact('.draggable')
